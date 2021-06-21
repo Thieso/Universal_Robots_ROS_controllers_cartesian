@@ -47,18 +47,18 @@
 #include <atomic>
 #include <mutex>
 #include <actionlib/server/simple_action_server.h>
-#include <cartesian_interface/speed_scaling_interface.h>
+#include <speed_scaling_interface/speed_scaling_interface.h>
 
 namespace cartesian_trajectory_controller
 {
 
   template <class HWInterface>
-    class CartesianTrajectoryController : public cartesian_ros_control::ControlPolicy<HWInterface>
+    class CartesianTrajectoryController : public ros_controllers_cartesian::ControlPolicy<HWInterface>
   {
 
     public:
       CartesianTrajectoryController()
-        : cartesian_ros_control::ControlPolicy<HWInterface>()
+        : ros_controllers_cartesian::ControlPolicy<HWInterface>()
       {};
 
       virtual ~CartesianTrajectoryController(){};
@@ -78,7 +78,7 @@ namespace cartesian_trajectory_controller
       void preemptCB();
 
     protected:
-      using ControlPolicy = cartesian_ros_control::ControlPolicy<HWInterface>;
+      using ControlPolicy = ros_controllers_cartesian::ControlPolicy<HWInterface>;
 
       struct TrajectoryDuration
       {
@@ -90,20 +90,20 @@ namespace cartesian_trajectory_controller
 
       void timesUp();
 
-      void monitorExecution(const cartesian_ros_control::CartesianState& error);
+      void monitorExecution(const ros_controllers_cartesian::CartesianState& error);
 
-      bool withinTolerances(const cartesian_ros_control::CartesianState& error,
+      bool withinTolerances(const ros_controllers_cartesian::CartesianState& error,
                             const cartesian_control_msgs::CartesianTolerance& tolerance);
 
     private:
-      std::unique_ptr<hardware_interface::SpeedScalingHandle> speed_scaling_;
+      std::unique_ptr<scaled_controllers::SpeedScalingHandle> speed_scaling_;
       std::unique_ptr<actionlib::SimpleActionServer<cartesian_control_msgs::FollowCartesianTrajectoryAction> >
         action_server_;
       ros::ServiceClient dist_sensor_serv;
       double offset;
       std::atomic<bool> done_;
       std::mutex lock_;
-      cartesian_ros_control::CartesianTrajectory trajectory_;
+      ros_controllers_cartesian::CartesianTrajectory trajectory_;
       TrajectoryDuration trajectory_duration_;
       cartesian_control_msgs::CartesianTolerance path_tolerances_;
       cartesian_control_msgs::CartesianTolerance goal_tolerances_;

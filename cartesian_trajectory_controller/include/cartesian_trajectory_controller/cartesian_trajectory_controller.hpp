@@ -57,7 +57,7 @@ namespace cartesian_trajectory_controller
       }
 
       // Use speed scaling interface if available
-      auto speed_scaling_interface = hw->get<hardware_interface::SpeedScalingInterface>();
+      auto speed_scaling_interface = hw->get<scaled_controllers::SpeedScalingInterface>();
       if (!speed_scaling_interface)
       {
         ROS_INFO_STREAM(
@@ -67,7 +67,7 @@ namespace cartesian_trajectory_controller
       }
       else
       {
-        speed_scaling_ = std::make_unique<hardware_interface::SpeedScalingHandle>(
+        speed_scaling_ = std::make_unique<scaled_controllers::SpeedScalingHandle>(
             speed_scaling_interface->getHandle("speed_scaling_factor"));
       }
 
@@ -125,7 +125,7 @@ namespace cartesian_trajectory_controller
         {
           std::lock_guard<std::mutex> lock_trajectory(lock_);
 
-          cartesian_ros_control::CartesianState desired;
+          ros_controllers_cartesian::CartesianState desired;
           trajectory_.sample(trajectory_duration_.now.toSec(), desired);
           dist_sensor_service::DistSensor srv;
           if (dist_sensor_serv.call(srv))
@@ -231,7 +231,7 @@ namespace cartesian_trajectory_controller
       Result result;
 
       // When time is over, sampling gives us the last waypoint.
-      cartesian_ros_control::CartesianState goal;
+      ros_controllers_cartesian::CartesianState goal;
       {
         std::lock_guard<std::mutex> lock_trajectory(lock_);
         trajectory_.sample(trajectory_duration_.now.toSec(), goal);
@@ -260,7 +260,7 @@ namespace cartesian_trajectory_controller
     }
 
   template <class HWInterface>
-    void CartesianTrajectoryController<HWInterface>::monitorExecution(const cartesian_ros_control::CartesianState& error)
+    void CartesianTrajectoryController<HWInterface>::monitorExecution(const ros_controllers_cartesian::CartesianState& error)
     {
 
       if (!withinTolerances(error, path_tolerances_))
@@ -274,7 +274,7 @@ namespace cartesian_trajectory_controller
     }
 
   template <class HWInterface>
-    bool CartesianTrajectoryController<HWInterface>::withinTolerances(const cartesian_ros_control::CartesianState& error,
+    bool CartesianTrajectoryController<HWInterface>::withinTolerances(const ros_controllers_cartesian::CartesianState& error,
                           const cartesian_control_msgs::CartesianTolerance& tolerance)
     {
       // Uninitialized tolerances do not need checking

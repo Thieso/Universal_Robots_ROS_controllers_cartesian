@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   pluginlib
   roscpp
   rospy
+  speed_scaling_interface
 )
 
 ## System dependencies are found with CMake's conventions
@@ -110,17 +111,17 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} ik_solver_example
   CATKIN_DEPENDS
   cartesian_interface
   cartesian_trajectory_interpolation
   controller_manager
   hardware_interface
-  dist_sensor_service
   kdl_parser
   pluginlib
   roscpp
   rospy
+  speed_scaling_interface
 #  DEPENDS system_lib
 )
 
@@ -139,11 +140,15 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/cartesian_trajectory_controller.cpp
 )
+add_library(ik_solver_example
+  src/ik_solver_example.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(ik_solver_example ${ik_solver_example_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -162,6 +167,9 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(ik_solver_example
   ${catkin_LIBRARIES}
 )
 
@@ -192,6 +200,11 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+install(TARGETS ik_solver_example
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
@@ -203,12 +216,28 @@ install(DIRECTORY include/${PROJECT_NAME}/
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
   ${PROJECT_NAME}_plugin.xml
+  ik_solver_example_plugin.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Install test setup files for packages that re-use them
+install(FILES
+  test/config.yaml
+  test/controllers.yaml
+  test/robot.urdf.xacro
+  test/setup.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/test/
 )
 
 #############
 ## Testing ##
 #############
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  add_rostest(test/cartesian_trajectory_controller.test)
+endif()
 
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_cartesian_trajectory_controller.cpp)
@@ -218,3 +247,4 @@ install(FILES
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
